@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <script>
+            class Deck {
+                // 객체 생성시 52장의 카드를 가진다.
+                deck;
+                constructor() {
+                    this.deck = this.makeDeck();
+                }
+
+                // 52장의 카드를 가진 덱을 만드는 함수
+                makeDeck() {
+                    let deckArr = [];
+                    for (let num = 0; num < 52; num++) {
+                        // 이미지 객체 생성
+                        let card = document.createElement('img');
+                        // 카드 고유 번호
+                        card.id = num + 1;
+                        // 카드 번호
+                        card.num = `${(num % 13) + 1}`;
+                        // 카드 색깔
+                        card.color = Math.floor(num / 13) % 2 == 0 ? 'red' : 'black';
+                        // 카드 클래스
+                        card.class = `${(num % 13) + 1} ${card.color}`;
+                        // 카드 앞면
+                        card.frontImg = `card_img/${num}.png`;
+                        // 카드 뒷면
+                        card.backImg = 'card_img/back.png';
+                        // 현재 카드가 보이는 면
+                        card.src = card.backImg;
+                        // 카드의 상태
+                        card.state = 'back';
+                        deckArr.push(card);
+                    }
+                    return deckArr;
+                }
+            }
+
+            class Card {
+                id;
+                num;
+                color;
+                card;
+                frontImg;
+                backImg;
+                state;
+
+                constructor(num) {
+                    this.id = num + 1;
+                    this.num = `${(num % 13) + 1}`;
+                    this.color = Math.floor(num / 13) % 2 == 0 ? 'red' : 'black';
+                    this.card = document.createElement('img');
+                    this.frontImg = `card_img/${num}.png`;
+                    this.backImg = 'card_img/back.png';
+                    this.state = 'front';
+                }
+
+                toString() {
+                    return this.card;
+                }
+            }
+        </script>
+    </body>
+</html>

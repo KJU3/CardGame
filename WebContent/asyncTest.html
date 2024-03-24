@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <!-- 
+    목적 : 비동기식 통신을 테스트 한다.
+    
+    Ajax, XMLHttp 통신, Jquery, 프로미스를 사용해볼 것.
+    프로미스를 사용해서 통신한다.
+    화면의 일부분만 비동기식 통신으로 데이터를 요청하여 자바스크립트로 수정한다.
+
+
+
+-->
+
+    <form>
+        <label>이름을 입력하세요</label>
+        <input type="text" name="username" class="user" />
+        <input type="button" id="submit" value="입력" />
+    </form>
+
+    <br /><br />
+    <div id="message"></div>
+    <body>
+        <script type="text/javascript" src="http://code.jquery.com/jquery-3.5.1.min.js"></script>
+        <script>
+            // const obj = {
+            //     name: 'Lee',
+            //     age: 20,
+            //     hobby: ['trveling', 'tennis'],
+            // };
+
+            // const json = JSON.stringify(obj);
+
+            // const xhr = new XMLHttpRequest();
+
+            // xhr.open('GET', '/WebContent/response.jsp');
+
+            // xhr.setRequestHeader('contentType', 'application/json');
+
+            // xhr.send(JSON.stringify({ id: 1, content: 'HTML' }));
+
+            // xhr.onreadystatechange = () => {
+            //     if (xhr.readyState !== XMLHttpRequest.DONE) return;
+            // };
+
+            // if (xhr.status === 200) {
+            //     console.log(JSON.parse(json));
+            // } else {
+            //     console.error('Error', xhr.status, xhr.statusText);
+            // }
+
+            $(document).ready(function () {
+                $('#submit').click(function () {
+                    let sendData = 'username=' + $('input[name=username]').val();
+                    $.ajax({
+                        type: 'post',
+                        url: '/CardGame/response.jsp',
+                        data: sendData,
+                        dataType: 'html',
+                        success: function (data) {
+                            $('#message').html(data);
+                        },
+                    });
+                });
+                // $.ajax({
+                //     type: 'get',
+                //     url: '/WebContent/response.jsp',
+                //     dataType: 'text',
+                //     success: function (data) {
+                //         alert(data);
+                //     },
+                //     error: function () {
+                //         alert('fail');
+                //     },
+                // });
+            });
+        </script>
+    </body>
+</html>
