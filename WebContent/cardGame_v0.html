@@ -4,8 +4,76 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Document</title>
+        <style>
+            /* 초기화 */
+
+            * {
+                margin: 0;
+                padding: 0;
+            }
+
+            body {
+                font-family: sans-serif;
+            }
+
+            li {
+                list-style: none;
+            }
+            a {
+                text-decoration: none;
+            }
+            img {
+                border: 0;
+            }
+
+            #main_header {
+                width: 960;
+                margin: 0 auto;
+
+                height: 160px;
+                position: relative;
+            }
+
+            #content {
+                width: 960px;
+                margin: 0 auto;
+                overflow: hidden;
+            }
+
+            #content > #main_section {
+                width: 750px;
+                float: left;
+            }
+            #content > #main_aside {
+                width: 200px;
+                float: right;
+            }
+
+            #gameTable img {
+                max-width: 70px;
+                width: auto;
+                height: auto;
+            }
+
+            #buttons button {
+                visibility: hidden;
+            }
+        </style>
     </head>
     <body>
+        <div id="content">
+            <section id="main_section">
+                <!-- 게임진행 레이아웃 -->
+                <div id="gameLayout">
+                    <!-- <div id="infoTable"></div> -->
+                    <div id="gameTable"></div>
+                </div>
+            </section>
+            <aside id="main_aside">
+                <div id="rankBoard"></div>
+            </aside>
+        </div>
+
         <script>
             class Deck {
                 // 객체 생성시 52장의 카드를 가진다.
@@ -18,53 +86,184 @@
                 makeDeck() {
                     let deckArr = [];
                     for (let num = 0; num < 52; num++) {
-                        // 이미지 객체 생성
                         let card = document.createElement('img');
-                        // 카드 고유 번호
                         card.id = num + 1;
-                        // 카드 번호
                         card.num = `${(num % 13) + 1}`;
-                        // 카드 색깔
                         card.color = Math.floor(num / 13) % 2 == 0 ? 'red' : 'black';
-                        // 카드 클래스
                         card.class = `${(num % 13) + 1} ${card.color}`;
-                        // 카드 앞면
                         card.frontImg = `card_img/${num}.png`;
-                        // 카드 뒷면
                         card.backImg = 'card_img/back.png';
-                        // 현재 카드가 보이는 면
                         card.src = card.backImg;
-                        // 카드의 상태
                         card.state = 'back';
                         deckArr.push(card);
                     }
                     return deckArr;
                 }
-            }
 
-            class Card {
-                id;
-                num;
-                color;
-                card;
-                frontImg;
-                backImg;
-                state;
+                static flip(e) {
+                    let card = e;
+                    if (e instanceof PointerEvent) {
+                        card = e.target;
+                    }
 
-                constructor(num) {
-                    this.id = num + 1;
-                    this.num = `${(num % 13) + 1}`;
-                    this.color = Math.floor(num / 13) % 2 == 0 ? 'red' : 'black';
-                    this.card = document.createElement('img');
-                    this.frontImg = `card_img/${num}.png`;
-                    this.backImg = 'card_img/back.png';
-                    this.state = 'front';
+                    if (card.state === 'front') {
+                        card.src = card.backImg;
+                        card.state = 'back';
+                    } else {
+                        card.src = card.frontImg;
+                        card.state = 'front';
+                    }
                 }
 
-                toString() {
-                    return this.card;
+                static compareCard(first, second) {
+                    return first.class === second.class;
+                }
+
+                shuffleDeck() {
+                    this.deck.sort(function () {
+                        return Math.random() - 0.5;
+                    });
                 }
             }
+
+            class Table {
+                gameTable = document.getElementById('gameTable');
+                // deck = new Deck();
+
+                tableSetting(deck) {
+                    // let deck = this.deck;
+                    for (let i = 0; i < deck.length; i++) {
+                        gameTable.appendChild(deck[i]);
+                    }
+                }
+            }
+
+            class Dealer {
+                table = new Table();
+                deck = new Deck();
+            }
+
+            class Guest {
+                observer = new Observer();
+                firstCard;
+                score = 0;
+                pickTwoCard(e) {
+                    const card = eventToCard(e);
+                    // 카드가 앞면이면 뒤집지 못한다.
+                    if (card.state === 'front') return;
+                    // 첫번째 카드이면 뒤집어서 갖는다.
+                    if (!this.firstCard) {
+                        Deck.flip(card);
+                        this.firstCard = card;
+                    } else {
+                        Deck.flip(card);
+                        if (Deck.compareCard(this.firstCard, card)) {
+                            this.score++;
+                            this.firstCard = 0;
+                            this.notifyObserber();
+                        } else {
+                            setTimeout(Deck.flip, 1000, this.firstCard);
+                            setTimeout(Deck.flip, 1000, card);
+                            // Deck.flip(this.firstCard);
+                            // Deck.flip(card);
+                            this.firstCard = 0;
+                        }
+                    }
+                }
+
+                clearScore() {
+                    return (this.score = 0);
+                }
+
+                getScore() {
+                    return this.score;
+                }
+
+                notifyObserber() {
+                    this.observer.update(this);
+                }
+            }
+
+            class Observer {
+                update(target) {
+                    fetch('/CardGame/response.jsp?score=' + target.getScore());
+                    rankBoard.innerHTML = target.getScore();
+                    // db에 점수 저장
+                }
+            }
+
+            function eventToCard(e) {
+                return e instanceof PointerEvent ? e.target : e;
+            }
+
+            const dealer = new Dealer();
+            const deck = dealer.deck;
+            const gameTable = dealer.table.gameTable;
+            const rankBoard = document.getElementById('rankBoard');
+            const guest = new Guest();
+
+            gameTable.addEventListener('click', guest.pickTwoCard.bind(guest));
+
+            window.onload = function () {
+                // 테이블 셋팅.
+                dealer.table.tableSetting(deck.deck);
+                // 게임 시작.
+                // gameStart();
+                // 게임 끝.
+                // gameEnd();
+                //
+            };
+
+            // class Table {
+            //     gameTable = document.getElementById('gameTable');
+
+            //     tableSetting() {
+            //         let deck = this.deck;
+            //         for (let i = 0; i < deck.length; i++) {
+            //             gameTable.appendChild(deck[i]);
+            //         }
+            //     }
+
+            //     shuffleDeckOfTable() {
+            //         let deck = this.deck;
+            //         deck.sort(function () {
+            //             return Math.random() - 0.5;
+            //         });
+            //         this.tableSetting();
+            //     }
+
+            //     sortDeckOfTable() {
+            //         let deck = this.deck;
+            //         deck.sort(function (a, b) {
+            //             return a.id - b.id;
+            //         });
+            //         this.tableSetting();
+            //     }
+            // }
+
+            // class Card {
+            //     id;
+            //     num;
+            //     color;
+            //     card;
+            //     frontImg;
+            //     backImg;
+            //     state;
+
+            //     constructor(num) {
+            //         this.id = num + 1;
+            //         this.num = `${(num % 13) + 1}`;
+            //         this.color = Math.floor(num / 13) % 2 == 0 ? 'red' : 'black';
+            //         this.card = document.createElement('img');
+            //         this.frontImg = `card_img/${num}.png`;
+            //         this.backImg = 'card_img/back.png';
+            //         this.state = 'front';
+            //     }
+
+            //     toString() {
+            //         return this.card;
+            //     }
+            // }
         </script>
     </body>
 </html>
